@@ -26,7 +26,7 @@ def xgboost_model(data_box):
         'max_depth': 6,
         'gamma': 0,
         'min_child_weight': 1,
-        'tree_method': 'gpu_hist'
+       # 'tree_method': 'gpu_hist'
     }
     num_round = 5000
     evallist = [(dtrain, 'train'), (dvali, 'vali')]

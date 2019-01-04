@@ -12,12 +12,12 @@ import os
 
 class Constants:
     # data path
-    data_path = '../data'
+    data_path = '..\data'
     train_data_path = os.path.join(data_path, 'train_a.csv')
     test_data_path = os.path.join(data_path, 'test_a.csv')
     submit_sample_path = os.path.join(data_path, 'submit.csv')
 
-    results_path = '../data/results'
+    results_path = '..\data\\results'
     submit_path = os.path.join(results_path, 'submit_result.csv')
 
     # time features
