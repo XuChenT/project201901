@@ -57,6 +57,7 @@ class DataBox:
     def saving_submit_result(self):
         self._submit_result.to_csv(Constants.submit_path, index=False, header=False)
 
+
 def read_raw_data():
     """
     Read raw train/test data set

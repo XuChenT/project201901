@@ -8,6 +8,10 @@
     Pipline of whole project
 """
 
+from lib.dataio import prepare_data_pipline
+from model.lgbmodel import lgb_model
 
-
+if __name__ == "__main__":
+    data_box = prepare_data_pipline()
+    lgb_model(data_box)
 
