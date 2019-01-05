@@ -115,7 +115,7 @@ def split_df(train_df, test_size=0.1, shuffle=True):
 def prepare_data_pipline():
     train_df, test_df = read_raw_data()
     all_data = combine_data(train_df, test_df)
-    data_cleaning_pipline(all_data)
+    all_data = data_cleaning_pipline(all_data)
     data_box = DataBox(all_data)
     return data_box
 

@@ -12,16 +12,20 @@ import os
 
 class Constants:
     # data path
-    data_path = '../data'
+    root_path = '..'
+    data_path = os.path.join(root_path, 'data')
     train_data_path = os.path.join(data_path, 'train_a.csv')
     test_data_path = os.path.join(data_path, 'test_a.csv')
     submit_sample_path = os.path.join(data_path, 'submit.csv')
 
-    results_path = '../data/results'
+    # results_path = '../data/results'
+    results_path = os.path.join(root_path, 'data', 'results')
     submit_path = os.path.join(results_path, 'submit_result.csv')
 
     # time features
     timestamp_features = ['A5', 'A7', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
     time_interval_features = ['A20', 'A28', 'B4', 'B9', 'B10', 'B11']
+
+    index_and_label = ['Sample_id', 'Yield']
 
 
