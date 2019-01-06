@@ -12,23 +12,32 @@ import os
 
 class Constants:
     # data path
-    root_path = '..'
-    data_path = os.path.join(root_path, 'data')
-    train_data_path = os.path.join(data_path, 'train_a.csv')
-    test_data_path = os.path.join(data_path, 'test_a.csv')
-    submit_sample_path = os.path.join(data_path, 'submit.csv')
+    ROOT_PATH = '..'
+    DATA_PATH = os.path.join(ROOT_PATH, 'data')
+    TRAIN_DATA_PATH = os.path.join(DATA_PATH, 'train_a.csv')
+    TEST_DATA_PATH = os.path.join(DATA_PATH, 'test_a.csv')
+    SUBMIT_SAMPLE_PATH = os.path.join(DATA_PATH, 'submit.csv')
 
-    # results_path = '../data/results'
-    results_path = os.path.join(root_path, 'data', 'results')
-    submit_path = os.path.join(results_path, 'submit_result.csv')
+    RESULTS_PATH = os.path.join(ROOT_PATH, 'data', 'results')
+    SUBMIT_PATH = os.path.join(RESULTS_PATH, 'submit_result.csv')
 
     # time features
-    timestamp_features = ['A5', 'A7', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
-    time_interval_features = ['A20', 'A28', 'B4', 'B9', 'B10', 'B11']
+    TIMESTAMP_FEATURES = ['A5', 'A7', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
+    TIME_INTERVAL_FEATURES = ['A20', 'A28', 'B4', 'B9', 'B10', 'B11']
 
-    timestamp_caseA = ['A5', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26']
-    timestamp_caseB = ['B5','B7']
+    TIMESTAMP_CASE_A = ['A5', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26']
+    # GROUP_1: A5 - A18,
+    # NOTES: A7(A8) is ignored cause the number of NONE
+    TIMESTAMP_CASE_A_GROUP_1 = ['A5', 'A9', 'A11', 'A14', 'A16']
+    TEMPERATURE_STATUS_CASE_A_GROUP_1 = {'A5': 'A6', 'A9': 'A10',
+                                         'A11': 'A12', 'A14': 'A15',
+                                         'A16': 'A17'}
 
-    index_and_label = ['Sample_id', 'Yield']
+    TIMESTAMP_CASE_B = ['B5', 'B7']
+
+    # material features
+    MATERIAL_A_GROUP_1 = ['A1', 'A2', 'A3', 'A4']
+
+    INDEX_AND_LABEL = ['Sample_id', 'Yield']
 
 

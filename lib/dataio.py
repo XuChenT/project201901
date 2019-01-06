@@ -28,6 +28,7 @@ class DataBox:
 
         # split train/validation
         self.train_index, self.vali_index = split_df(self.train_df_all)
+
         self.train_df = self.train_df_all.loc[self.train_index, :].drop(['Sample_id', 'Yield'], axis=1)
         self.vali_df = self.train_df_all.loc[self.vali_index, :].drop(['Sample_id', 'Yield'], axis=1)
         self.train_label = self.train_df_all.loc[self.train_index, 'Yield']
@@ -56,7 +57,7 @@ class DataBox:
             print('Length of Model results dose not match length of test data set')
 
     def saving_submit_result(self):
-        self._submit_result.to_csv(Constants.submit_path, index=False, header=False)
+        self._submit_result.to_csv(Constants.SUBMIT_PATH, index=False, header=False)
 
 
 def read_raw_data():
@@ -65,8 +66,8 @@ def read_raw_data():
     :return: train data , test data
     """
     print(os.getcwd())
-    train_df = pd.read_csv(Constants.train_data_path, encoding='gb18030', sep=',')
-    test_df = pd.read_csv(Constants.test_data_path, encoding='gb18030', sep=',')
+    train_df = pd.read_csv(Constants.TRAIN_DATA_PATH, encoding='gb18030', sep=',')
+    test_df = pd.read_csv(Constants.TEST_DATA_PATH, encoding='gb18030', sep=',')
 
     train_df.rename(columns={'样本id': 'Sample_id', '收率': 'Yield'}, inplace=True)
     test_df.rename(columns={'样本id': 'Sample_id'}, inplace=True)
@@ -103,6 +104,7 @@ def split_df(train_df, test_size=0.1, shuffle=True):
     train_df_index = train_df.index.tolist()
 
     if shuffle:
+        random.seed(666)
         vali_index = random.sample(range(len(train_df_index)), test_size)
         train_index = list(set([i for i in range(len(train_df_index))]) - set(vali_index))
         assert len(set(vali_index)) == test_size
