@@ -12,7 +12,7 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from lib.constants import Constants
-
+import re
 
 def data_encoder(all_df, encoder_way='LabelEncoder'):
     """
@@ -67,18 +67,41 @@ def exception_handling(all_df):
     all_df['A25'] = all_df['A25'].apply(handling_A25)
     return all_df
 
-
 def delete_useless_features(all_df):
     for col in all_df.columns:
         if all_df[col].unique().shape[0] < 3 and col not in Constants.index_and_label:
             all_df.drop(col, axis=1, inplace=True)
             print(col)
     return all_df
+def add_time_A_feature(all_df):
+    def time_handle(x):
+        pattern = re.compile(r'\d+:\d+:\d+')
+        for item in Constants.timestamp_caseA:
+            if item == Constants.timestamp_caseA[0]:
+                item_last = item
+                continue
+            elif pattern.match(x[item]) is not None and pattern.match(x[item_last]) is not None:
+                tmpcur = x[item].split(':')
+                tmplast = x[item_last].split(':')
+                if int(tmpcur[0])<int(tmplast[0]) and int(tmpcur[0]) == 0:
+                    tmpcur[0] = '24'
+
+                x[item+item_last] =  (int(tmpcur[0]) - int(tmplast[0])) + \
+                                     (int(tmpcur[1]) - int(tmplast[1]))/60 +\
+                                     (int(tmpcur[2]) - int(tmplast[2]))/3600
+
+            else:
+                x[item+item_last] = 0
+            item_last = item
+        return x
+    all_df = all_df.apply(time_handle,axis=1)
+    return all_df
 
 
 def data_cleaning_pipline(all_df):
     all_df = fillna_strategy(all_df)
     all_df = exception_handling(all_df)
+    all_df = add_time_A_feature(all_df)
     all_df = data_encoder(all_df, encoder_way='OneHotEncoder')
     # all_df = delete_useless_features(all_df)
     return all_df

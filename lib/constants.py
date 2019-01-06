@@ -26,6 +26,9 @@ class Constants:
     timestamp_features = ['A5', 'A7', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
     time_interval_features = ['A20', 'A28', 'B4', 'B9', 'B10', 'B11']
 
+    timestamp_caseA = ['A5', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26']
+    timestamp_caseB = ['B5','B7']
+
     index_and_label = ['Sample_id', 'Yield']
 
 
