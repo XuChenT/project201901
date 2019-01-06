@@ -7,6 +7,7 @@
 @description: 
     Static methods about data IO
 """
+import os
 import random
 import pandas as pd
 
@@ -63,6 +64,7 @@ def read_raw_data():
     Read raw train/test data set
     :return: train data , test data
     """
+    print(os.getcwd())
     train_df = pd.read_csv(Constants.train_data_path, encoding='gb18030', sep=',')
     test_df = pd.read_csv(Constants.test_data_path, encoding='gb18030', sep=',')
 
@@ -114,10 +116,8 @@ def split_df(train_df, test_size=0.1, shuffle=True):
 
 def prepare_data_pipline():
     train_df, test_df = read_raw_data()
-    all_data = combine_data(train_df, test_df)
-    all_data = data_cleaning_pipline(all_data)
-    data_box = DataBox(all_data)
-    return data_box
+    all_df = combine_data(train_df, test_df)
+    return all_df
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 # project201901
 The First Competition in 2019
-
+![](imgs/20190106-102307.png)
+![](imgs/20190106-102322.png)
 ---
 #### Notes
 - 原始数据在`/data`文件夹中,提交结果放在`/data/result`
