@@ -10,6 +10,7 @@
 
 import lightgbm as lgb
 
+from lib.datacleaning import data_cleaning_pipline
 from lib.dataio import DataBox, prepare_data_pipline
 
 
@@ -41,5 +42,7 @@ def lgb_model(data_box):
 
 
 if __name__ == "__main__":
-    data_box = prepare_data_pipline()
+    all_df = prepare_data_pipline()
+    all_df = data_cleaning_pipline(all_df)
+    data_box = DataBox(all_df)
     lgb_model(data_box)
