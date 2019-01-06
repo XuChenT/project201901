@@ -83,8 +83,8 @@ def add_time_A_feature(all_df):
             elif pattern.match(x[item]) is not None and pattern.match(x[item_last]) is not None:
                 tmpcur = x[item].split(':')
                 tmplast = x[item_last].split(':')
-                if int(tmpcur[0])<int(tmplast[0]) and int(tmpcur[0]) == 0:
-                    tmpcur[0] = '24'
+                if int(tmpcur[0])<int(tmplast[0]):
+                    tmpcur[0] = str(24+int(tmpcur[0]))
 
                 x[item+item_last] =  (int(tmpcur[0]) - int(tmplast[0])) + \
                                      (int(tmpcur[1]) - int(tmplast[1]))/60 +\
@@ -96,12 +96,47 @@ def add_time_A_feature(all_df):
         return x
     all_df = all_df.apply(time_handle,axis=1)
     return all_df
+def add_time_B_feature(all_df):
+    def time_handle(x):
+        pattern = re.compile(r'\d+:\d+:\d+')
+        if pattern.match(x['B5']) is not None and pattern.match(x['B7']) is not None:
+            tmpcur = x['B7'].split(':')
+            tmplast = x['B5'].split(':')
+            if int(tmpcur[0]) < int(tmplast[0]):
+                tmpcur[0] = str(24+int(tmpcur[0]))
+            x['B7B5'] =  (int(tmpcur[0]) - int(tmplast[0])) + \
+                                     (int(tmpcur[1]) - int(tmplast[1]))/60 +\
+                                     (int(tmpcur[2]) - int(tmplast[2]))/3600
+        else:
+            x['B7B5'] = 0
+        return x
+    all_df = all_df.apply(time_handle,axis=1)
+    return all_df
 
+def add_timeinterval_features(all_df):
+    def time_interval_handle(x):
+        pattern = re.compile(r'\d+:\d+-\d+:\d+')
+        for item in Constants.time_interval_features:
+            if pattern.match(x[item]) is not None:
+                cols = re.split('-|:',x[item])
+                if cols[3][-1] == '分':
+                    cols[3] = cols[3][0:-1]
+                if int(cols[0]) > int(cols[2]):
+                    cols[2] = str(24+int(cols[2]));  # 处理case  23：00-00：00
+                x[item + 'delta'] = int(cols[2]) - int(cols[0]) + \
+                                           (int(cols[3]) - int(cols[1])) / 60
+            else:
+                x[item+'delta'] = 0
+        return x
+    all_df = all_df.apply(time_interval_handle,axis=1)
+    return all_df
 
 def data_cleaning_pipline(all_df):
     all_df = fillna_strategy(all_df)
     all_df = exception_handling(all_df)
     all_df = add_time_A_feature(all_df)
+    all_df = add_time_B_feature(all_df)
+    all_df = add_timeinterval_features(all_df)
     all_df = data_encoder(all_df, encoder_way='OneHotEncoder')
     # all_df = delete_useless_features(all_df)
     return all_df
