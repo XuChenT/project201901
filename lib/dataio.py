@@ -118,6 +118,7 @@ def split_df(train_df, test_size=0.1, shuffle=True):
 
 def prepare_data_pipline():
     train_df, test_df = read_raw_data()
+    train_df = train_df[train_df['Yield'] > 0.87]
     all_df = combine_data(train_df, test_df)
     return all_df
 

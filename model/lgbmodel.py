@@ -36,7 +36,7 @@ def lgb_model(data_box):
 
     num_round = 10000
     clf = lgb.train(param, dtrain, num_round, valid_sets=[dtrain, dvali], verbose_eval=200,
-                    early_stopping_rounds=200)
+                    early_stopping_rounds=100)
     data_box.submit_result = clf.predict(data_box.test_df, num_iteration=clf.best_iteration)
     data_box.saving_submit_result()
 

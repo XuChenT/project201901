@@ -26,6 +26,7 @@ def data_encoder(all_df, encoder_way='LabelEncoder'):
     """
     assert encoder_way in ['LabelEncoder', 'OneHotEncoder']
 
+    encode_col = []
     for col in all_df.columns:
         if col in Constants.TIME_INTERVAL_FEATURES or col in Constants.TIMESTAMP_FEATURES:
             if encoder_way == 'LabelEncoder':
@@ -77,10 +78,13 @@ def exception_handling(all_df):
 
 
 def delete_useless_features(all_df):
-    for col in all_df.columns:
-        if all_df[col].unique().shape[0] < 3 and col not in Constants.INDEX_AND_LABEL:
-            all_df.drop(col, axis=1, inplace=True)
-            print(col)
+    # for col in all_df.columns:
+    #     if all_df[col].unique().shape[0] < 3 and col not in Constants.INDEX_AND_LABEL:
+    #         all_df.drop(col, axis=1, inplace=True)
+    #         print(col)
+
+    all_df.drop(Constants.USELESS_COL, axis=1, inplace=True)
+
     return all_df
 
 
@@ -107,13 +111,13 @@ def add_time_A_feature(all_df):
         return x
     all_df = all_df.apply(time_handle, axis=1)
 
-    pre_time = Constants.TIMESTAMP_CASE_A_GROUP_1[0]
+    pre_time = Constants.TIMESTAMP_CASE_A[0]
 
     all_df['A16A5'] = 0
-    for time_index in range(1, len(Constants.TIMESTAMP_CASE_A_GROUP_1)):
-        time = Constants.TIMESTAMP_CASE_A_GROUP_1[time_index]
-        pre_tem = Constants.TEMPERATURE_STATUS_CASE_A_GROUP_1[pre_time]
-        tem = Constants.TEMPERATURE_STATUS_CASE_A_GROUP_1[time]
+    for time_index in range(1, len(Constants.TIMESTAMP_CASE_A)):
+        time = Constants.TIMESTAMP_CASE_A[time_index]
+        pre_tem = Constants.TEMPERATURE_STATUS_CASE_A[pre_time]
+        tem = Constants.TEMPERATURE_STATUS_CASE_A[time]
 
         # change in unit time
         all_df[tem + pre_tem + 'rate'] = (all_df[tem] - all_df[pre_tem])/all_df[time + pre_time]
@@ -135,9 +139,9 @@ def add_time_B_feature(all_df):
             tmplast = x['B5'].split(':')
             if int(tmpcur[0]) < int(tmplast[0]):
                 tmpcur[0] = str(24+int(tmpcur[0]))
-            x['B7B5'] =  (int(tmpcur[0]) - int(tmplast[0])) + \
-                                     (int(tmpcur[1]) - int(tmplast[1]))/60 +\
-                                     (int(tmpcur[2]) - int(tmplast[2]))/3600
+            x['B7B5'] = (int(tmpcur[0]) - int(tmplast[0])) + \
+                        (int(tmpcur[1]) - int(tmplast[1]))/60 +\
+                        (int(tmpcur[2]) - int(tmplast[2]))/3600
         else:
             x['B7B5'] = 0
         return x
@@ -175,16 +179,38 @@ def adding_material_A_group_1_features(all_df):
         encoder = LabelEncoder()
         combine_col = encoder.fit_transform(combine_col)
         all_df[col[0] + '_' + col[1]] = combine_col
+        all_df[col[0] + '_' + col[1]] = all_df[col[0] + '_' + col[1]].astype(str)
+    return all_df
+
+
+def test_feature(all_df):
+    train_df = all_df[all_df['Yield'] != -1]
+    train_df['intYield'] = pd.cut(train_df['Yield'], 5, labels=False)
+    train_df = pd.get_dummies(train_df, columns=['intYield'])
+    li = ['intYield_0', 'intYield_1', 'intYield_2', 'intYield_3', 'intYield_4']
+    mean_features = []
+
+    for f1 in train_df.columns:
+        if f1 not in ['Sample_id', 'Yield']:
+            rate = train_df[f1].value_counts(normalize=True, dropna=False).values[0]
+            if rate < 0.50:
+                for f2 in li:
+                    col_name = f1+"_"+f2+'_mean'
+                    mean_features.append(col_name)
+                    order_label = train_df.groupby([f1])[f2].mean()
+                    # for df in [train, test]:
+                    all_df[col_name] = all_df[f1].map(order_label)
     return all_df
 
 
 def data_cleaning_pipline(all_df):
     all_df = fillna_strategy(all_df)
     all_df = exception_handling(all_df)
+    # all_df = test_feature(all_df)
     all_df = add_time_A_feature(all_df)
     all_df = add_time_B_feature(all_df)
     all_df = add_timeinterval_features(all_df)
-    all_df = data_encoder(all_df, encoder_way='OneHotEncoder')
+    all_df = delete_useless_features(all_df)
     all_df = adding_material_A_group_1_features(all_df)
-    # all_df = delete_useless_features(all_df)
+    all_df = data_encoder(all_df, encoder_way='OneHotEncoder')
     return all_df
