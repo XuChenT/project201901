@@ -22,22 +22,23 @@ class Constants:
     SUBMIT_PATH = os.path.join(RESULTS_PATH, 'submit_result.csv')
 
     # time features
-    TIMESTAMP_FEATURES = ['A5', 'A7', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
+    TIMESTAMP_FEATURES = ['A5', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
     TIME_INTERVAL_FEATURES = ['A20', 'A28', 'B4', 'B9', 'B10', 'B11']
 
     TIMESTAMP_CASE_A = ['A5', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26']
     # GROUP_1: A5 - A18,
     # NOTES: A7(A8) is ignored cause the number of NONE
-    TIMESTAMP_CASE_A_GROUP_1 = ['A5', 'A9', 'A11', 'A14', 'A16']
-    TEMPERATURE_STATUS_CASE_A_GROUP_1 = {'A5': 'A6', 'A9': 'A10',
-                                         'A11': 'A12', 'A14': 'A15',
-                                         'A16': 'A17'}
+    TEMPERATURE_STATUS_CASE_A = {'A5': 'A6', 'A9': 'A10',
+                                 'A11': 'A12', 'A14': 'A15',
+                                 'A16': 'A17', 'A24': 'A25', 'A26': 'A27'}
 
     TIMESTAMP_CASE_B = ['B5', 'B7']
 
     # material features
-    MATERIAL_A_GROUP_1 = ['A1', 'A2', 'A3', 'A4']
+    MATERIAL_A_GROUP_1 = ['A1', 'A19']
+    MATERIAL_A_GROUP_2 = ['A2', 'A3', 'A4']
 
     INDEX_AND_LABEL = ['Sample_id', 'Yield']
 
+    USELESS_COL = ['A7', 'A8', 'A18']
 
