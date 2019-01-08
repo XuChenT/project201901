@@ -20,7 +20,7 @@ def lgb_model(data_box):
              'min_data_in_leaf': 30,
              'objective': 'regression',
              'max_depth': -1,
-             'learning_rate': 0.01,
+             'learning_rate': 0.001,
              "min_child_samples": 30,
              "boosting": "gbdt",
              "feature_fraction": 0.9,

@@ -11,7 +11,7 @@ import datetime
 import itertools
 
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, PolynomialFeatures
 
 from lib.constants import Constants
 import re
@@ -218,6 +218,15 @@ def adding_material_A_group_1_features(all_df):
         all_df[col[0] + '_' + col[1] + '_' + col[2]] = combine_col
         all_df[col[0] + '_' + col[1] + '_' + col[2]] = all_df[col[0] + '_' + col[1] + '_' + col[2]].astype(str)
 
+    for col in Constants.MATERIAL:
+        all_df[col].fillna(all_df[col].value_counts().index.tolist()[0], inplace=True)
+    poly = PolynomialFeatures(2)
+    test = poly.fit_transform(all_df[Constants.MATERIAL])
+    test = test[:, len(Constants.MATERIAL):]
+    for i in range(test.shape[1]):
+        encoder = LabelEncoder()
+        all_df['Poly_'+str(i)] = test[:, i]
+        all_df['Poly_' + str(i)] = encoder.fit_transform(all_df['Poly_' + str(i)])
     return all_df
 
 
