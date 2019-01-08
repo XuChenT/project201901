@@ -13,14 +13,17 @@ from lib.dataio import DataBox, prepare_data_pipline
 import xgboost as xgb
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def xgb_classification(data_box):
     assert isinstance(data_box, DataBox)
 
+    class_num = 4
     encoder = LabelEncoder()
-    dtrain = xgb.DMatrix(data_box.train_df, label=encoder.fit_transform(data_box.train_label.round(1)))
-    dvali = xgb.DMatrix(data_box.vali_df, label=encoder.transform(data_box.vali_label.round(1)))
+    print(pd.cut(data_box.train_label, class_num).unique())
+    dtrain = xgb.DMatrix(data_box.train_df, label=pd.cut(data_box.train_label, class_num, labels=False))
+    dvali = xgb.DMatrix(data_box.vali_df, label=pd.cut(data_box.vali_label, class_num, labels=False))
     dtest = xgb.DMatrix(data_box.test_df)
 
     param = {'eta': 0.005,
@@ -31,9 +34,8 @@ def xgb_classification(data_box):
                  # 'eval_metric': 'rmse',
                  'silent': True,
                  'nthread': 4,
-                 'num_class': data_box.all_df['Yield'].round(1).unique().shape[0]-1
+                 'num_class': class_num
              }
-    print(data_box.all_df['Yield'].round(1).unique().shape[0]-1)
     num_round = 5000
     evallist = [(dtrain, 'train'), (dvali, 'vali')]
     xgb_module = xgb.train(param, dtrain, num_round, evallist, early_stopping_rounds=100)
