@@ -45,4 +45,5 @@ if __name__ == "__main__":
     all_df = prepare_data_pipline()
     all_df = data_cleaning_pipline(all_df)
     data_box = DataBox(all_df)
+
     lgb_model(data_box)

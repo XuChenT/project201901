@@ -72,7 +72,6 @@ def exception_handling(all_df):
         except Exception:
             x = int(all_df.loc[all_df.index.tolist()[0], 'A25'])
         return x
-
     all_df['A25'] = all_df['A25'].apply(handling_A25)
     return all_df
 
