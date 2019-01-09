@@ -22,7 +22,7 @@ class Constants:
     SUBMIT_PATH = os.path.join(RESULTS_PATH, 'submit_result.csv')
 
     # time features
-    TIMESTAMP_FEATURES = ['A5', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
+    TIMESTAMP_FEATURES = ['A5', 'A7', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26', 'B5', 'B7']
     TIME_INTERVAL_FEATURES = ['A20', 'A28', 'B4', 'B9', 'B10', 'B11']
 
     TIMESTAMP_CASE_A = ['A5', 'A9', 'A11', 'A14', 'A16', 'A24', 'A26']
@@ -35,8 +35,10 @@ class Constants:
     TIMESTAMP_CASE_B = ['B5', 'B7']
 
     # material features
+    MATERIAL = ['A1', 'A2', 'A3', 'A4', 'A19', 'B1', 'B12', 'B14']
     MATERIAL_A_GROUP_1 = ['A1', 'A19']
     MATERIAL_A_GROUP_2 = ['A2', 'A3', 'A4']
+    MATERIAL_B = ['B1', 'B12', 'B14']
 
     INDEX_AND_LABEL = ['Sample_id', 'Yield']
 

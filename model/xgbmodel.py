@@ -12,6 +12,7 @@ from lib.dataio import DataBox, prepare_data_pipline
 from lib.datacleaning import data_cleaning_pipline
 
 import xgboost as xgb
+import matplotlib.pyplot as plt
 
 
 def xgboost_model(data_box):
@@ -21,18 +22,21 @@ def xgboost_model(data_box):
     dvali = xgb.DMatrix(data_box.vali_df, label=data_box.vali_label)
     dtest = xgb.DMatrix(data_box.test_df)
 
-    param = {
-        'objective': 'reg:linear',
-        'eta': 0.05,
-        'max_depth': 6,
-        'gamma': 0,
-        'min_child_weight': 1,
-        'tree_method': 'gpu_hist'
-    }
+    param = {'eta': 0.005,
+             'max_depth': 10,
+             'subsample': 0.8,
+             'colsample_bytree': 0.8,
+             'objective': 'reg:linear',
+             'eval_metric': 'rmse',
+             'silent': True,
+             'nthread': 4}
     num_round = 5000
     evallist = [(dtrain, 'train'), (dvali, 'vali')]
     xgb_module = xgb.train(param, dtrain, num_round, evallist, early_stopping_rounds=100)
     data_box.submit_result = xgb_module.predict(dtest, ntree_limit=xgb_module.best_ntree_limit)
+    plt.plot(data_box.vali_label.tolist())
+    plt.plot(xgb_module.predict(dtest, ntree_limit=xgb_module.best_ntree_limit))
+    plt.show()
     data_box.saving_submit_result()
 
 

@@ -7,10 +7,11 @@
 @description: 
     Static methods of data cleaning
 """
+import datetime
 import itertools
 
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, PolynomialFeatures
 
 from lib.constants import Constants
 import re
@@ -63,9 +64,33 @@ def fillna_strategy(all_df):
     return all_df
 
 
-def exception_handling(all_df):
-    # A25:
+def repair_timestamp(all_df):
+    """
+    fill NONE for time stamp features
+    Notes:  should be run after adding time features
+    :param all_df:
+    :return:
+    """
 
+    # A7/A8 will be handled alone
+    def repair_A7(x):
+        if x['A7'] == 'NONE':
+            x['A7'] = str((pd.to_datetime(x['A5']) +
+                           datetime.timedelta(hours=x['A9A5']/2)).time())
+            x['A8'] = x['A6'] + x['A9A5'] / 2 * x['A10A6rate']
+        return x
+
+    all_df = all_df.apply(repair_A7, axis=1)
+    return all_df
+
+
+def exception_handling(all_df):
+    """
+    repair specific features
+    :param all_df:
+    :return:
+    """
+    # A25:
     def handling_A25(x):
         try:
             x = int(x)
@@ -163,26 +188,53 @@ def add_timeinterval_features(all_df):
             else:
                 x[item+'delta'] = 0
         return x
-    all_df = all_df.apply(time_interval_handle,axis=1)
+    all_df = all_df.apply(time_interval_handle, axis=1)
     return all_df
 
 
 def adding_material_A_group_1_features(all_df):
+    """
+    encode material features
+    :param all_df:
+    :return:
+    """
     # numerical new features
     all_df['A_1_2_3_4'] = all_df['A1'] + all_df['A2'] + all_df['A3'] + all_df['A4']
     all_df['A_2_3_4'] = all_df['A2'] + all_df['A3'] + all_df['A4']
 
     # handling as scatter features
-    for col in itertools.combinations(Constants.MATERIAL_A_GROUP_1, 2):
+    for col in itertools.combinations(Constants.MATERIAL, 2):
         combine_col = all_df[col[0]].astype(str) + all_df[col[1]].astype(str)
         encoder = LabelEncoder()
         combine_col = encoder.fit_transform(combine_col)
         all_df[col[0] + '_' + col[1]] = combine_col
         all_df[col[0] + '_' + col[1]] = all_df[col[0] + '_' + col[1]].astype(str)
+
+    for col in itertools.combinations(Constants.MATERIAL, 3):
+        combine_col = all_df[col[0]].astype(str) + all_df[col[1]].astype(str) + all_df[col[2]].astype(str)
+        encoder = LabelEncoder()
+        combine_col = encoder.fit_transform(combine_col)
+        all_df[col[0] + '_' + col[1] + '_' + col[2]] = combine_col
+        all_df[col[0] + '_' + col[1] + '_' + col[2]] = all_df[col[0] + '_' + col[1] + '_' + col[2]].astype(str)
+
+    for col in Constants.MATERIAL:
+        all_df[col].fillna(all_df[col].value_counts().index.tolist()[0], inplace=True)
+    poly = PolynomialFeatures(2)
+    test = poly.fit_transform(all_df[Constants.MATERIAL])
+    test = test[:, len(Constants.MATERIAL):]
+    for i in range(test.shape[1]):
+        encoder = LabelEncoder()
+        all_df['Poly_'+str(i)] = test[:, i]
+        all_df['Poly_' + str(i)] = encoder.fit_transform(all_df['Poly_' + str(i)])
     return all_df
 
 
 def test_feature(all_df):
+    """
+    features from forum
+    :param all_df:
+    :return:
+    """
     train_df = all_df[all_df['Yield'] != -1]
     train_df['intYield'] = pd.cut(train_df['Yield'], 5, labels=False)
     train_df = pd.get_dummies(train_df, columns=['intYield'])
@@ -209,7 +261,8 @@ def data_cleaning_pipline(all_df):
     all_df = add_time_A_feature(all_df)
     all_df = add_time_B_feature(all_df)
     all_df = add_timeinterval_features(all_df)
-    all_df = delete_useless_features(all_df)
+    all_df = repair_timestamp(all_df)
+    # all_df = delete_useless_features(all_df)
     all_df = adding_material_A_group_1_features(all_df)
     all_df = data_encoder(all_df, encoder_way='OneHotEncoder')
     return all_df
