@@ -10,6 +10,7 @@
 import os
 import random
 import pandas as pd
+from sklearn.cross_validation import KFold
 
 from lib.constants import Constants
 from lib.datacleaning import data_cleaning_pipline
@@ -32,7 +33,7 @@ class DataBox:
         self.train_df = self.train_df_all.loc[self.train_index, :].drop(['Sample_id', 'Yield'], axis=1)
         self.vali_df = self.train_df_all.loc[self.vali_index, :].drop(['Sample_id', 'Yield'], axis=1)
         self.train_label = self.train_df_all.loc[self.train_index, 'Yield']
-        self.vali_label= self.train_df_all.loc[self.vali_index, 'Yield']
+        self.vali_label = self.train_df_all.loc[self.vali_index, 'Yield']
 
         # cache sample ID
         self.train_df_sample_id = self.train_df_all.loc[self.train_index, 'Sample_id']
@@ -40,6 +41,8 @@ class DataBox:
         self.test_df_sample_id = self.all_df.loc[self.all_df['Yield'] == -1, 'Sample_id']
 
         self._submit_result = self.all_df.loc[self.all_df['Yield'] == -1, ['Sample_id', 'Yield']]
+
+        self.folds = None
 
     @property
     def submit_result(self):
@@ -55,6 +58,14 @@ class DataBox:
             assert self._submit_result.shape[1] == 2
         except ValueError:
             print('Length of Model results dose not match length of test data set')
+
+    def k_folds(self, k_fold=5, shuffle=True):
+        self.folds = KFold(n=self.train_df_all.shape[0], n_folds=k_fold, shuffle=shuffle, random_state=666)
+        for train_idx, vali_idx in self.folds:
+            yield self.train_df_all.loc[train_idx, :].drop(['Sample_id', 'Yield'], axis=1), \
+                  self.train_df_all.loc[train_idx, 'Yield'], \
+                  self.train_df_all.loc[vali_idx, :].drop(['Sample_id', 'Yield'], axis=1), \
+                  self.train_df_all.loc[vali_idx, 'Yield']
 
     def saving_submit_result(self):
         self._submit_result.to_csv(Constants.SUBMIT_PATH, index=False, header=False)
