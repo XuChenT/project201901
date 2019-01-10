@@ -139,17 +139,21 @@ for f1 in categorical_columns:
             col_name = 'B14_to_' + f1 + "_" + f2 + '_mean'
             mean_columns.append(col_name)
             order_label = train.groupby([f1])[f2].mean()
-            train[col_name] = train['B14'].map(order_label)
+            train[col_name] = train[f1].map(order_label)
+            # train[col_name] = train['B14'].map(order_label)
             miss_rate = train[col_name].isnull().sum() * 100 / train[col_name].shape[0]
             if miss_rate > 0:
                 train = train.drop([col_name], axis=1)
                 mean_columns.remove(col_name)
             else:
-                test[col_name] = test['B14'].map(order_label)
+                test[col_name] = test[f1].map(order_label)
+                # test[col_name] = test['B14'].map(order_label)
 
 train.drop(li + ['target'], axis=1, inplace=True)
 print(train.shape)
 print(test.shape)
+train['Sample_id'] = df.loc[:train.shape[0], '样本id'].apply(lambda x: int(x.split('_')[1]))
+test['Sample_id'] = df.loc[train.shape[0]:, '样本id'].apply(lambda x: int(x.split('_')[1]))
 
 
 X_train = train[mean_columns].values
@@ -180,7 +184,7 @@ for trn_idx, val_idx in folds:
     predictions_xgb += clf.predict(xgb.DMatrix(X_test), ntree_limit=clf.best_ntree_limit) / folds.n_folds
 
 sub_df = pd.read_csv(Constants.SUBMIT_PATH, header=None)
-sub_df[1] = clf.predict(xgb.DMatrix(X_test), ntree_limit=clf.best_iteration)
+sub_df[1] = predictions_xgb
 sub_df[1] = sub_df[1].apply(lambda x: round(x, 3))
 sub_df.to_csv(Constants.SUBMIT_PATH, index=False, header=False)
 
