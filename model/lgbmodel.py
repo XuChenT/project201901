@@ -9,6 +9,7 @@
 """
 
 import lightgbm as lgb
+from sklearn.cross_validation import KFold
 
 from lib.datacleaning import data_cleaning_pipline
 from lib.dataio import DataBox, prepare_data_pipline
@@ -30,6 +31,8 @@ def lgb_model(data_box):
              "metric": 'mse',
              "lambda_l1": 0.1,
              "verbosity": -1}
+
+    # kfolds
 
     dtrain = lgb.Dataset(data_box.train_df, label=data_box.train_label)
     dvali = lgb.Dataset(data_box.vali_df, label=data_box.vali_label)

@@ -107,8 +107,14 @@ def delete_useless_features(all_df):
     #         all_df.drop(col, axis=1, inplace=True)
     #         print(col)
 
-    all_df.drop(Constants.USELESS_COL, axis=1, inplace=True)
-
+    # all_df.drop(Constants.USELESS_COL, axis=1, inplace=True)
+    bad_cols = list(all_df.columns)
+    for col in all_df.columns:
+        rate = all_df[col].value_counts(normalize=True, dropna=False).values[0]
+        if rate < 0.9:
+            bad_cols.remove(col)
+            print(col, rate)
+    all_df.drop(bad_cols, axis=1, inplace=True)
     return all_df
 
 
@@ -217,15 +223,15 @@ def adding_material_A_group_1_features(all_df):
         all_df[col[0] + '_' + col[1] + '_' + col[2]] = combine_col
         all_df[col[0] + '_' + col[1] + '_' + col[2]] = all_df[col[0] + '_' + col[1] + '_' + col[2]].astype(str)
 
-    for col in Constants.MATERIAL:
-        all_df[col].fillna(all_df[col].value_counts().index.tolist()[0], inplace=True)
-    poly = PolynomialFeatures(2)
-    test = poly.fit_transform(all_df[Constants.MATERIAL])
-    test = test[:, len(Constants.MATERIAL):]
-    for i in range(test.shape[1]):
-        encoder = LabelEncoder()
-        all_df['Poly_'+str(i)] = test[:, i]
-        all_df['Poly_' + str(i)] = encoder.fit_transform(all_df['Poly_' + str(i)])
+    # for col in Constants.MATERIAL:
+    #     all_df[col].fillna(all_df[col].value_counts().index.tolist()[0], inplace=True)
+    # poly = PolynomialFeatures(2)
+    # test = poly.fit_transform(all_df[Constants.MATERIAL])
+    # test = test[:, len(Constants.MATERIAL):]
+    # for i in range(test.shape[1]):
+    #     encoder = LabelEncoder()
+    #     all_df['Poly_'+str(i)] = test[:, i]
+    #     all_df['Poly_' + str(i)] = encoder.fit_transform(all_df['Poly_' + str(i)])
     return all_df
 
 
@@ -242,27 +248,38 @@ def test_feature(all_df):
     mean_features = []
 
     for f1 in train_df.columns:
-        if f1 not in ['Sample_id', 'Yield']:
+        if f1 not in ['Sample_id', 'Yield'] and f1 not in li:
             rate = train_df[f1].value_counts(normalize=True, dropna=False).values[0]
-            if rate < 0.50:
+            if rate < 0.90:
                 for f2 in li:
                     col_name = f1+"_"+f2+'_mean'
                     mean_features.append(col_name)
                     order_label = train_df.groupby([f1])[f2].mean()
                     # for df in [train, test]:
-                    all_df[col_name] = all_df[f1].map(order_label)
+                    train_df[col_name] = train_df[f1].map(order_label)
+                    miss_rate = train_df[col_name].isnull().sum() * 100 / train_df[col_name].shape[0]
+                    if miss_rate > 0:
+                        mean_features.remove(col_name)
+                    else:
+                        all_df[col_name] = all_df[f1].map(order_label)
     return all_df
+
+
+def id_features(id_df):
+    return id_df.apply(lambda x: int(x.split('_')[1]))
 
 
 def data_cleaning_pipline(all_df):
     all_df = fillna_strategy(all_df)
     all_df = exception_handling(all_df)
-    # all_df = test_feature(all_df)
+    all_df = test_feature(all_df)
     all_df = add_time_A_feature(all_df)
     all_df = add_time_B_feature(all_df)
     all_df = add_timeinterval_features(all_df)
     all_df = repair_timestamp(all_df)
-    # all_df = delete_useless_features(all_df)
+
     all_df = adding_material_A_group_1_features(all_df)
+    all_df = delete_useless_features(all_df)
     all_df = data_encoder(all_df, encoder_way='OneHotEncoder')
+    all_df['id'] = id_features(all_df['Sample_id'])
     return all_df
