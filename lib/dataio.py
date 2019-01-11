@@ -44,6 +44,13 @@ class DataBox:
 
         self.folds = None
 
+    def result_classfier(self,value):
+        Yield = self.all_df['Yield'].unique().tolist()
+        for index,v in enumerate(value):
+            sub = []
+            [sub.append(abs(v - y)) for y in Yield]
+            value[index] = Yield[sub.index(min(sub))]
+        return value
     @property
     def submit_result(self):
         return self._submit_result
@@ -53,6 +60,8 @@ class DataBox:
         try:
             if isinstance(value, pd.Series):
                 value = value.tolist()
+            value = self.result_classfier(value)
+            print(len(list(set(value))))
             self._submit_result['Yield'] = value
             assert self._submit_result.shape[0] == self.test_df.shape[0]
             assert self._submit_result.shape[1] == 2
