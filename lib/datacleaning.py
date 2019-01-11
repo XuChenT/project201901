@@ -178,7 +178,6 @@ def add_time_B_feature(all_df):
     all_df = all_df.apply(time_handle,axis=1)
     return all_df
 
-
 def add_timeinterval_features(all_df):
     def time_interval_handle(x):
         pattern = re.compile(r'\d+:\d+-\d+:\d+')
@@ -268,7 +267,54 @@ def test_feature(all_df):
 def id_features(id_df):
     return id_df.apply(lambda x: int(x.split('_')[1]))
 
+def add_total_B_material(all_df):
+    def B1_mult_B2(x):
+        try:
+            x['B1B2'] = int(x['B1']) * int(x['B2'])
+        except:
+            if x['B1'] == 'nan':
+                x['B1B2'] = int(x['B2'])
+            elif x['B2'] == 'nan':
+                x['B1B2'] = int(x['B1'])
+            else:
+                x['B1B2'] = 0
 
+        return x
+
+    all_df = all_df.apply(B1_mult_B2,axis=1)
+    return all_df
+def add_PH_feature(all_df):
+    "add PH vary speed"
+    def PH_handle(x):
+        try:
+            x['PH_vary_speed'] = (int(x['A22'])-int(x['A23']))/x['A20delta']
+        except ValueError:
+            x['PH_vary_speed'] = -1
+        finally:
+            return x
+
+    all_df.loc[all_df['A20delta']==0,'A20delta'] = all_df['A20delta'].mean()
+    all_df = all_df.apply(PH_handle,axis=1)
+    all_df.loc[all_df['PH_vary_speed'] == -1, 'PH_vary_speed'] = all_df['PH_vary_speed'].mean()
+    return all_df
+
+
+def test_add_PH2_feature(all_df):
+    "add PH vary speed"
+
+    def PH_handle(x):
+        try:
+            x['PH_vary_speed2'] = int(x['A27']) - int(x['A21'])
+        except ValueError:
+            x['PH_vary_speed2'] = -1
+        finally:
+            return x
+
+    all_df['PH_vary_speed2'] = 0
+    all_df['PH_vary_speed2'] = all_df[['A27','A21']].apply(PH_handle, axis=1)
+    all_df.loc[all_df['PH_vary_speed2']==-1,'PH_vary_speed2'] = all_df['PH_vary_speed2'].mean()
+    print(all_df['PH_vary_speed2'].unique())
+    return all_df
 def data_cleaning_pipline(all_df):
     all_df = fillna_strategy(all_df)
     all_df = exception_handling(all_df)
@@ -277,6 +323,9 @@ def data_cleaning_pipline(all_df):
     all_df = add_time_B_feature(all_df)
     all_df = add_timeinterval_features(all_df)
     all_df = repair_timestamp(all_df)
+    all_df = add_total_B_material(all_df)
+    #all_df = add_PH_feature(all_df)
+    all_df = test_add_PH2_feature(all_df)
 
     all_df = adding_material_A_group_1_features(all_df)
     all_df = delete_useless_features(all_df)

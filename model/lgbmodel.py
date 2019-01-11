@@ -13,7 +13,7 @@ from sklearn.cross_validation import KFold
 
 from lib.datacleaning import data_cleaning_pipline
 from lib.dataio import DataBox, prepare_data_pipline
-
+import numpy as np
 
 def lgb_model(data_box):
     assert isinstance(data_box, DataBox)
@@ -33,7 +33,6 @@ def lgb_model(data_box):
              "verbosity": -1}
 
     # kfolds
-
     dtrain = lgb.Dataset(data_box.train_df, label=data_box.train_label)
     dvali = lgb.Dataset(data_box.vali_df, label=data_box.vali_label)
 
