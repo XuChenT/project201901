@@ -55,11 +55,12 @@ test = test[good_cols]
 
 # 合并数据集
 target = train['收率']
+target_dict = sorted(target.unique().tolist())
 del train['收率']
 data = pd.concat([train,test],axis=0,ignore_index=True)
 data = data.fillna(-1)
 
-del data['样本id']
+# del data['样本id']
 
 
 def timeTranSecond(t):
@@ -115,7 +116,10 @@ for f in ['A20', 'A28', 'B4', 'B9', 'B10', 'B11']:
     data[f] = data.apply(lambda df: getDuration(df[f]), axis=1)
 
 
-categorical_columns = [f for f in data.columns]
+data['样本id'] = data['样本id'].apply(lambda x: int(x.split('_')[1]))
+
+categorical_columns = [f for f in data.columns if f not in ['样本id']]
+numerical_columns = [f for f in data.columns if f not in categorical_columns]
 
 #label encoder
 for f in categorical_columns:
@@ -152,12 +156,10 @@ for f1 in categorical_columns:
 train.drop(li + ['target'], axis=1, inplace=True)
 print(train.shape)
 print(test.shape)
-train['Sample_id'] = df.loc[:train.shape[0], '样本id'].apply(lambda x: int(x.split('_')[1]))
-test['Sample_id'] = df.loc[train.shape[0]:, '样本id'].apply(lambda x: int(x.split('_')[1]))
 
 
-X_train = train[mean_columns].values
-X_test = test[mean_columns].values
+X_train = train[mean_columns+numerical_columns].values
+X_test = test[mean_columns+numerical_columns].values
 # one hot
 enc = OneHotEncoder()
 for f in categorical_columns:
@@ -185,7 +187,27 @@ for trn_idx, val_idx in folds:
 
 sub_df = pd.read_csv(Constants.SUBMIT_PATH, header=None)
 sub_df[1] = predictions_xgb
+
+
+def set_target(x):
+    for i in range(len(target_dict)):
+        if x < target_dict[i]:
+            # try:
+            if target_dict[i]-x > x - target_dict[i-1]:
+                return target_dict[i-1]
+            elif target_dict[i]-x < x - target_dict[i-1]:
+                return target_dict[i]
+            else:
+                return x
+            # except IndexError:
+            #     return target_dict[i-1]
+        else:
+            continue
+
+
+sub_df[1] = sub_df[1].apply(set_target)
 sub_df[1] = sub_df[1].apply(lambda x: round(x, 3))
+print(target_dict)
 sub_df.to_csv(Constants.SUBMIT_PATH, index=False, header=False)
 
 

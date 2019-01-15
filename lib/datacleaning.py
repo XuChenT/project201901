@@ -27,21 +27,24 @@ def data_encoder(all_df, encoder_way='LabelEncoder'):
     """
     assert encoder_way in ['LabelEncoder', 'OneHotEncoder']
 
-    encode_col = []
+    encode_col = Constants.TIME_INTERVAL_FEATURES + Constants.TIME_INTERVAL_FEATURES + Constants.MATERIAL
     for col in all_df.columns:
-        if col in Constants.TIME_INTERVAL_FEATURES or col in Constants.TIMESTAMP_FEATURES:
+        if col in Constants.TIME_INTERVAL_FEATURES + Constants.TIME_INTERVAL_FEATURES + Constants.MATERIAL:
             if encoder_way == 'LabelEncoder':
                 le = LabelEncoder()
                 all_df[col] = le.fit_transform(all_df[col])
             elif encoder_way == "OneHotEncoder":
                 one_hot_buf = pd.get_dummies(all_df[col])
-                one_hot_buf.columns = [col+'_'+str(i) for i in range(all_df[col].unique().shape[0])]
+                one_hot_buf.columns = [col+'_'+str(i) for i in range(one_hot_buf.shape[1])]
                 assert one_hot_buf.shape[0] == all_df.shape[0]
                 all_df = pd.concat([all_df, one_hot_buf], axis=1)
         elif all_df[col].dtype == 'object' and col != 'Sample_id':
             all_df[col] = all_df[col].astype(int)
-    all_df.drop(Constants.TIMESTAMP_FEATURES, axis=1, inplace=True)
-    all_df.drop(Constants.TIME_INTERVAL_FEATURES, axis=1, inplace=True)
+    if encoder_way == 'OneHotEncoder':
+
+        for col in all_df.columns:
+            if col in Constants.TIME_INTERVAL_FEATURES + Constants.TIME_INTERVAL_FEATURES + Constants.MATERIAL:
+                all_df.drop(col, axis=1, inplace=True)
     return all_df
 
 
@@ -56,6 +59,8 @@ def fillna_strategy(all_df):
     for col in all_df.columns:
         if col in Constants.TIME_INTERVAL_FEATURES or col in Constants.TIMESTAMP_FEATURES:
             all_df[col].fillna('NONE', inplace=True)
+
+    # all_df = all_df.fillna(-1)
 
     # features: A1-A4 filling None strategy:
     for col in Constants.MATERIAL_A_GROUP_1:
@@ -109,13 +114,13 @@ def delete_useless_features(all_df):
     #         print(col)
 
     # all_df.drop(Constants.USELESS_COL, axis=1, inplace=True)
-    bad_cols = list(all_df.columns)
+    good_col = list(all_df.columns)
     for col in all_df.columns:
         rate = all_df[col].value_counts(normalize=True, dropna=False).values[0]
-        if rate < 0.9:
-            bad_cols.remove(col)
+        if rate > 0.9:
+            good_col.remove(col)
             print(col, rate)
-    all_df.drop(bad_cols, axis=1, inplace=True)
+    all_df = all_df[good_col]
     return all_df
 
 
@@ -141,6 +146,30 @@ def add_time_A_feature(all_df):
             item_last = item
         return x
     all_df = all_df.apply(time_handle, axis=1)
+
+
+    def timeTranSecond(t):
+        try:
+            t, m, s = t.split(":")
+        except:
+            if t == '1900/1/9 7:00':
+                return 7 * 3600 / 3600
+            elif t == '1900/1/1 2:30':
+                return (2 * 3600 + 30 * 60) / 3600
+            elif t == -1:
+                return -1
+            else:
+                return 0
+
+        try:
+            tm = (int(t) * 3600 + int(m) * 60 + int(s)) / 3600
+        except:
+            return (30 * 60) / 3600
+
+        return tm
+
+    for time in Constants.TIMESTAMP_CASE_A + Constants.TIMESTAMP_CASE_B:
+        all_df[time] = all_df[time].apply(timeTranSecond)
 
     pre_time = Constants.TIMESTAMP_CASE_A[0]
 
@@ -181,21 +210,46 @@ def add_time_B_feature(all_df):
 
 
 def add_timeinterval_features(all_df):
-    def time_interval_handle(x):
-        pattern = re.compile(r'\d+:\d+-\d+:\d+')
-        for item in Constants.TIME_INTERVAL_FEATURES:
-            if pattern.match(x[item]) is not None:
-                cols = re.split('-|:', x[item])
-                if cols[3][-1] == '分':
-                    cols[3] = cols[3][0:-1]
-                if int(cols[0]) > int(cols[2]):
-                    cols[2] = str(24+int(cols[2]))  # 处理case  23：00-00：00
-                x[item + 'delta'] = int(cols[2]) - int(cols[0]) + \
-                                           (int(cols[3]) - int(cols[1])) / 60
+    # def time_interval_handle(x):
+    #     pattern = re.compile(r'\d+:\d+-\d+:\d+')
+    #     for item in Constants.TIME_INTERVAL_FEATURES:
+    #         if pattern.match(x[item]) is not None:
+    #             cols = re.split('-|:', x[item])
+    #             if cols[3][-1] == '分':
+    #                 cols[3] = cols[3][0:-1]
+    #             if int(cols[0]) > int(cols[2]):
+    #                 cols[2] = str(24+int(cols[2]))  # 处理case  23：00-00：00
+    #             x[item + 'delta'] = int(cols[2]) - int(cols[0]) + \
+    #                                        (int(cols[3]) - int(cols[1])) / 60
+    #         else:
+    #             x[item+'delta'] = 0
+    #     return x
+    # all_df = all_df.apply(time_interval_handle, axis=1)
+
+    def getDuration(se):
+        # tm = -1
+        try:
+            sh, sm, eh, em = re.findall(r"\d+\.?\d*", se)
+        except:
+            if se == 'NONE':
+                return -1
+
+        try:
+            if int(sh) > int(eh):
+                tm = (int(eh) * 3600 + int(em) * 60 - int(sm) * 60 - int(sh) * 3600) / 3600 + 24
             else:
-                x[item+'delta'] = 0
-        return x
-    all_df = all_df.apply(time_interval_handle, axis=1)
+                tm = (int(eh) * 3600 + int(em) * 60 - int(sm) * 60 - int(sh) * 3600) / 3600
+        except:
+            if se == '19:-20:05':
+                return 1
+            elif se == '15:00-1600':
+                return 1
+
+        return tm
+
+    for duration in Constants.TIME_INTERVAL_FEATURES:
+        all_df[duration] = all_df.apply(lambda df: getDuration(df[duration]), axis=1)
+
     return all_df
 
 
@@ -242,6 +296,11 @@ def test_feature(all_df):
     :param all_df:
     :return:
     """
+
+    for col in all_df.columns:
+        if col not in ['Sample_id', 'Yield']:
+            all_df[col] = all_df[col].map(dict(zip(all_df[col].unique(), range(0, all_df[col].nunique()))))
+
     train_df = all_df[all_df['Yield'] != -1]
     train_df['intYield'] = pd.cut(train_df['Yield'], 5, labels=False)
     train_df = pd.get_dummies(train_df, columns=['intYield'])
@@ -273,14 +332,15 @@ def id_features(id_df):
 def data_cleaning_pipline(all_df):
     all_df = fillna_strategy(all_df)
     all_df = exception_handling(all_df)
-    all_df = test_feature(all_df)
+
     all_df = add_time_A_feature(all_df)
-    all_df = add_time_B_feature(all_df)
+    # all_df = add_time_B_feature(all_df)
     all_df = add_timeinterval_features(all_df)
-    all_df = repair_timestamp(all_df)
+    # all_df = repair_timestamp(all_df)
 
     all_df = adding_material_A_group_1_features(all_df)
     all_df = delete_useless_features(all_df)
+    all_df = test_feature(all_df)
     all_df = data_encoder(all_df, encoder_way='OneHotEncoder')
     all_df['id'] = id_features(all_df['Sample_id'])
     return all_df
